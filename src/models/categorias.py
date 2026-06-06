@@ -7,6 +7,7 @@ class Categorias(Base):
     id = Column(Integer, primary_key=True)
     nombre = Column(String(255), nullable=False)
 
+#constructor de la clase
     def __init__(self, nombre):
         self.nombre = nombre
 
