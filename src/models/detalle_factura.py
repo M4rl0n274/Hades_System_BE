@@ -6,18 +6,9 @@ class DetalleFactura(Base):
     __tablename__ = 'detalle_factura'
 
     id = Column(Integer, primary_key=True)
+    id_factura = Column(Integer,ForeignKey('factura.id'),nullable=False)
 
-    id_factura = Column(
-        Integer,
-        ForeignKey('factura.id'),
-        nullable=False
-    )
-
-    id_producto = Column(
-        Integer,
-        ForeignKey('productos.id'),
-        nullable=False
-    )
+    id_producto = Column(Integer,ForeignKey('productos.id'),nullable=False)
 
     cantidad = Column(Integer, nullable=False)
 

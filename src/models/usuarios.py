@@ -6,11 +6,10 @@ class Usuario(Base):
 
     id = Column(Integer, primary_key=True)
     nombre = Column(String(100), nullable=False)
-    edad = Column(Integer, nullable=False)
+    apellido = Column(String(100), nullable=False)
     correo = Column(String(150), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
     documento_identidad = Column(String(50), unique=True, nullable=False)
-    fecha_nacimiento = Column(Date, nullable=False)
     rol = Column(String(50), nullable=False)
 
     def __init__(self, nombre, edad, correo, password,

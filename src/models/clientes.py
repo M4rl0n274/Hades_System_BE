@@ -1,15 +1,18 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, DateTime
 from src.models import Base, session
 
 class Clientes(Base):
     __tablename__ = 'clientes'
 
     id = Column(Integer, primary_key=True)
-    documento = Column(String(50), unique=True, nullable=False)
     nombre = Column(String(50), nullable=False)
+    apellido = Column(String(50), nullable=False)
+    edad = Column(Integer, nullable=False)
+    correo = Column(String(50), unique=True, nullable=False)
+    documentoIdentidad = Column(String(50), unique=True, nullable=False)
     direccion = Column(String(200), nullable=False)
     telefono = Column(String(20), nullable=False)
-    correo = Column(String(50), unique=True, nullable=False)
+    FechaDeNacimiento= Column(DateTime, nullable=False)
 
     def __init__(self, documento, nombre, direccion, telefono, email):
         self.documento = documento
