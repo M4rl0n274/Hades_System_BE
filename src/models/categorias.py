@@ -1,28 +1,27 @@
 from sqlalchemy import Column, Integer, String
-from src.models import Base, session 
+from src.models import Base, session
 
-class Categorias(Base):
+class Categoria(Base):
     __tablename__ = 'categorias'
 
     id = Column(Integer, primary_key=True)
-    nombre = Column(String(255), nullable=False)
+    nombre_categoria = Column(String(100), nullable=False)
+    descripcion = Column(String(255))
 
-#constructor de la clase
-    def __init__(self, nombre):
-        self.nombre = nombre
+    def __init__(self, nombre_categoria, descripcion):
+        self.nombre_categoria = nombre_categoria
+        self.descripcion = descripcion
 
     def save(self):
         session.add(self)
         session.commit()
 
     def get():
-        categorias = session.query(Categorias).all()
-        return categorias
-    
+        return session.query(Categoria).all()
+
     def get_by_id(id):
-        categoria = session.query(Categorias).filter_by(id=id).first()
-        return categoria
+        return session.query(Categoria).filter_by(id=id).first()
 
     def delete(self):
         session.delete(self)
-        session.commit()
+        session.commit()     

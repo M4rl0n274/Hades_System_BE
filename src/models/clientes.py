@@ -9,7 +9,7 @@ class Clientes(Base):
     nombre = Column(String(50), nullable=False)
     direccion = Column(String(200), nullable=False)
     telefono = Column(String(20), nullable=False)
-    email = Column(String(50), unique=True, nullable=False)
+    correo = Column(String(50), unique=True, nullable=False)
 
     def __init__(self, documento, nombre, direccion, telefono, email):
         self.documento = documento
