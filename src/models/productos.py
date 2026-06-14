@@ -7,7 +7,7 @@ class Productos(Base):
     __tablename__ = 'productos'
 
     id = Column(Integer, primary_key=True)
-    codigo = Column(String(50), unique=True, nullable=False)
+    codigo = Column(String(50), nullable=False)
     nombre = Column(String(255), nullable=False)
     descripcion = Column(String(255), nullable=False)
     unidad_medida = Column(String(3), nullable=False)
@@ -39,3 +39,7 @@ class Productos(Base):
     def delete(self):
         session.delete(self)
         session.commit()
+        
+        
+    def to_dict(self):
+        return {column.name: getattr(self, column.name) for column in self.__table__.columns}      
