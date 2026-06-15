@@ -6,27 +6,10 @@ class Factura(Base):
     __tablename__ = 'factura'
 
     id = Column(Integer, primary_key=True)
-
-    id_cliente = Column(
-        Integer,
-        ForeignKey('clientes.id'),
-        nullable=False
-    )
-
-    id_vendedor = Column(
-        Integer,
-        ForeignKey('vendedores.id'),
-        nullable=False
-    )
-
-    id_usuario = Column(
-        Integer,
-        ForeignKey('usuarios.id'),
-        nullable=False
-    )
-
+    id_cliente = Column(Integer,ForeignKey('clientes.id'),nullable=False)
+    id_vendedor = Column(Integer,ForeignKey('vendedores.id'),nullable=False)
+    id_usuario = Column(Integer,ForeignKey('usuarios.id'),nullable=False)
     fecha_factura = Column(DateTime, nullable=False)
-
     subtotal = Column(Numeric(10,2))
     iva = Column(Numeric(10,2))
     total = Column(Numeric(10,2))
@@ -56,3 +39,6 @@ class Factura(Base):
     def delete(self):
         session.delete(self)
         session.commit()
+        
+    def to_dict(self):
+        return {column.name: getattr(self, column.name) for column in self.__table__.columns}

@@ -12,20 +12,23 @@ class Usuario(Base):
     documento_identidad = Column(String(50), unique=True, nullable=False)
     rol = Column(String(50), nullable=False)
 
-    def __init__(self, nombre, edad, correo, password,
-                 documento_identidad, fecha_nacimiento, rol):
+    def __init__(self, nombre, apellido, correo, password,
+                 documento_identidad, rol):
 
         self.nombre = nombre
-        self.edad = edad
+        self.apellido = apellido
         self.correo = correo
         self.password = password
         self.documento_identidad = documento_identidad
-        self.fecha_nacimiento = fecha_nacimiento
         self.rol = rol
 
     def save(self):
-        session.add(self)
-        session.commit()
+        try:
+            session.add(self)
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
 
     def get():
         return session.query(Usuario).all()

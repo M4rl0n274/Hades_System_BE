@@ -14,12 +14,18 @@ class Clientes(Base):
     telefono = Column(String(20), nullable=False)
     FechaDeNacimiento= Column(DateTime, nullable=False)
 
-    def __init__(self, documento, nombre, direccion, telefono, email):
-        self.documento = documento
+    def __init__(self, nombre, apellido, edad,correo, documentoIdentidad,
+                direccion, telefono,FechaDeNacimiento):
+
         self.nombre = nombre
+        self.apellido = apellido
+        self.edad = edad
+        self.correo = correo
+        self.documentoIdentidad = documentoIdentidad
         self.direccion = direccion
         self.telefono = telefono
-        self.email = email
+        self.FechaDeNacimiento = FechaDeNacimiento  
+            
 
     def save(self):
         session.add(self)
@@ -36,7 +42,3 @@ class Clientes(Base):
     def delete(self):
         session.delete(self)
         session.commit()
-        
-        
-        
-        

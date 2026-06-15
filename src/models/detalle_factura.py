@@ -1,5 +1,4 @@
-from sqlalchemy import Column, Integer
-from sqlalchemy import Numeric, ForeignKey
+from sqlalchemy import Column, Integer, Numeric, ForeignKey
 from src.models import Base, session
 
 class DetalleFactura(Base):
@@ -7,20 +6,10 @@ class DetalleFactura(Base):
 
     id = Column(Integer, primary_key=True)
     id_factura = Column(Integer,ForeignKey('factura.id'),nullable=False)
-
     id_producto = Column(Integer,ForeignKey('productos.id'),nullable=False)
-
     cantidad = Column(Integer, nullable=False)
-
-    precio_unitario = Column(
-        Numeric(10,2),
-        nullable=False
-    )
-
-    subtotal_producto = Column(
-        Numeric(10,2),
-        nullable=False
-    )
+    precio_unitario = Column(Numeric(10,2),nullable=False)
+    subtotal_producto = Column(Numeric(10,2),nullable=False)
 
     def __init__(self, id_factura, id_producto,
                  cantidad, precio_unitario,
@@ -45,3 +34,8 @@ class DetalleFactura(Base):
     def delete(self):
         session.delete(self)
         session.commit()
+        
+    def to_dict(self):
+        return {column.name: getattr(self, column.name)
+        for column in self.__table__.columns
+    }
