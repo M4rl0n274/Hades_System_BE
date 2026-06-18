@@ -8,7 +8,6 @@ detalle_factura_bp = Blueprint(
     __name__
 )
 
-
 #? Obtener todos los detalles
 @detalle_factura_bp.route('/', methods=['GET'])
 def get_detalles():

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Numeric, ForeignKey
 from src.models import Base, session
-from src.models.categorias import Categorias
+
 
 class Productos(Base):
     __tablename__ = 'productos'

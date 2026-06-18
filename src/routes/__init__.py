@@ -7,7 +7,6 @@ from .usuarios_routes import usuarios_bp
 
 
 
-
 # Agrupamos todos los componentes en una lista iterable
 all_blueprints = [
     productos_bp,
