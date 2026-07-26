@@ -4,6 +4,7 @@ from .factura_routes import factura_bp
 from .detalle_factura_routes import detalle_factura_bp
 from .clientes_routes import clientes_bp  
 from .usuarios_routes import usuarios_bp  
+from .vendedores_routes import vendedores_bp  
 
 
 
@@ -14,5 +15,6 @@ all_blueprints = [
     factura_bp,
     detalle_factura_bp,
     clientes_bp,
-    usuarios_bp
+    usuarios_bp,
+    vendedores_bp
 ]

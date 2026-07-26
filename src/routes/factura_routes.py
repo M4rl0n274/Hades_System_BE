@@ -9,7 +9,7 @@ from src.models import session
 factura_bp = Blueprint('factura', __name__)
 
 
-# Obtener todas las facturas
+#? Obtener todas las facturas
 @factura_bp.route('/', methods=['GET'])
 def get_facturas():
 
@@ -21,7 +21,7 @@ def get_facturas():
     ]), 200
 
 
-# Obtener factura por ID
+#? Obtener factura por ID
 @factura_bp.route('/<int:id>', methods=['GET'])
 def get_factura(id):
 
@@ -35,7 +35,7 @@ def get_factura(id):
     return jsonify(factura.to_dict()), 200
 
 
-# Crear factura
+#? Crear factura
 @factura_bp.route('/', methods=['POST'])
 def create_factura():
 
@@ -133,7 +133,7 @@ def create_factura():
         }), 500
 
 
-# Eliminar factura
+#? Eliminar factura
 @factura_bp.route('/<int:id>', methods=['DELETE'])
 def delete_factura(id):
 
