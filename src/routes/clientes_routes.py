@@ -1,29 +1,55 @@
 from src.models.clientes import Clientes
 from flask import Blueprint, request, jsonify
+from src.utils.auth import token_required
 
 clientes_bp = Blueprint('clientes', __name__)
 
 # Obtener todos los clientes
 @clientes_bp.route('/', methods=['GET'])
+#decorado (@) para solicitar el jwt
+@token_required
 def get_clientes():
-    clientes = Clientes.get()
-    clientes_list = []
+    
+    #paginación
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=5, type=int)
 
-    for cliente in clientes:
-        clientes_list.append({
-            'id': cliente.id,
-            'documento': cliente.documento,
-            'nombre': cliente.nombre,
-            'direccion': cliente.direccion,
-            'telefono': cliente.telefono,
-            'email': cliente.email
-        })
+    clientes, total = Clientes.paginate(page=page, per_page=per_page)
 
-    return jsonify(clientes_list), 200
+    total_pages = (total + per_page - 1) // per_page  # Calcular el número total de páginas
+
+    return jsonify({
+        'data': [cliente.to_dict() for cliente in clientes],
+        'meta' : {
+            'page': page,
+            'per_page': per_page,
+            'total': total,
+            'total_pages': total_pages,
+            'has_next': page < total_pages,
+            'has_prev': page > 1
+        }
+    }), 200
+    
+    
+    # clientes = Clientes.get()
+    # clientes_list = []
+
+    # for cliente in clientes:
+    #     clientes_list.append({
+    #         'id': cliente.id,
+    #         'documento': cliente.documento,
+    #         'nombre': cliente.nombre,
+    #         'direccion': cliente.direccion,
+    #         'telefono': cliente.telefono,
+    #         'email': cliente.email
+    #     })
+
+    # return jsonify(clientes_list), 200
 
 
 # Obtener un cliente por ID
 @clientes_bp.route('/<int:id>', methods=['GET'])
+@token_required
 def get_cliente(id):
     cliente = Clientes.get_by_id(id)
 
@@ -47,6 +73,7 @@ def get_cliente(id):
 
 # Crear cliente
 @clientes_bp.route('/', methods=['POST'])
+@token_required
 def create_cliente():
 
     data = request.get_json()
@@ -94,6 +121,7 @@ def create_cliente():
 
 # Actualizar cliente
 @clientes_bp.route('/<int:id>', methods=['PUT'])
+@token_required
 def update_cliente(id):
 
     cliente = Clientes.get_by_id(id)
@@ -148,6 +176,7 @@ def update_cliente(id):
 
 # Eliminar cliente
 @clientes_bp.route('/<int:id>', methods=['DELETE'])
+@token_required
 def delete_cliente(id):
 
     cliente = Clientes.get_by_id(id)

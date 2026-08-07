@@ -1,11 +1,14 @@
 from src.models.categorias import Categorias
 from flask import Blueprint, request, jsonify
+from src.utils.auth import token_required
 
 categorias_bp = Blueprint('categorias', __name__)
 
 @categorias_bp.route('/', methods=['GET'])
+@token_required
 
 def get_categorias():
+    
     categorias = Categorias.get()
     categorias_list = []
     for categoria in categorias:
@@ -16,6 +19,7 @@ def get_categorias():
     return jsonify(categorias_list), 200
 
 @categorias_bp.route('/<int:id>', methods=['GET'])
+@token_required
 def get_categoria(id):
     categoria = Categorias.get_by_id(id)
     if categoria:
@@ -28,6 +32,7 @@ def get_categoria(id):
         return jsonify({'message': 'Categoría no encontrada'}), 404
 
 @categorias_bp.route('/', methods=['POST'])
+@token_required
 def create_categoria():
     data = request.get_json()
     categoria = Categorias(

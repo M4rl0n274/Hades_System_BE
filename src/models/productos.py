@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, func
 from src.models import Base, session
 from src.models.categorias import Categorias
 
@@ -43,3 +43,12 @@ class Productos(Base):
         
     def to_dict(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}      
+    
+    #* agregado para páginar la información
+    
+    def paginate(page=1, per_page=5):
+        total = (session.query(func.count(Productos.id)).scalar())
+        productos = session.query(Productos).offset((page - 1) * per_page).limit(per_page).all()
+        return productos, total
+    
+    

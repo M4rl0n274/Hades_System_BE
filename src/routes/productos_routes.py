@@ -1,31 +1,54 @@
 from flask import Blueprint, request, jsonify
 from src.models.productos import Productos
-
+from src.utils.auth import token_required, rol_required
 
 productos_bp = Blueprint('productos', __name__)
 
 #* Obtener un producto
 
 @productos_bp.route('/', methods=['GET'])
+@token_required
+@rol_required('Administrador', 'Vendedor')
 def get_productos():
-    productos = Productos.get()
-    productos_list = []
-    for producto in productos:
-        productos_list.append({
-            'id': producto.id,
-            'codigo': producto.codigo,
-            'nombre': producto.nombre,
-            'descripcion': producto.descripcion,
-            'unidad_medida': producto.unidad_medida,
-            'precio': producto.precio,
-            'stock': producto.stock,
-            'id_categoria': producto.id_categoria
-        })
-    return jsonify(productos_list), 200  
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=5, type=int)
+
+    productos, total = Productos.paginate(page=page, per_page=per_page)
+
+    total_pages = (total + per_page - 1) // per_page  # Calcular el número total de páginas
+
+    return jsonify({
+        'data': [producto.to_dict() for producto in productos],
+        'meta' : {
+            'page': page,
+            'per_page': per_page,
+            'total': total,
+            'total_pages': total_pages,
+            'has_next': page < total_pages,
+            'has_prev': page > 1
+        }
+    }), 200
+    
+    
+    # productos_list = []
+    # for producto in productos:
+    #     productos_list.append({
+    #         'id': producto.id,
+    #         'codigo': producto.codigo,
+    #         'nombre': producto.nombre,
+    #         'descripcion': producto.descripcion,
+    #         'unidad_medida': producto.unidad_medida,
+    #         'precio': producto.precio,
+    #         'stock': producto.stock,
+    #         'id_categoria': producto.id_categoria
+    #     })
+    # return jsonify(productos_list), 200  
 
 #* Obtener un producto por ID
 
 @productos_bp.route('/<int:id>', methods=['GET'])
+@token_required
+@rol_required('Administrador', 'Vendedor')
 def get_producto(id):
     producto = Productos.get_by_id(id)
     if producto:
@@ -47,6 +70,8 @@ def get_producto(id):
 #* Crear un producto
 
 @productos_bp.route('/', methods=['POST'])
+@token_required
+@rol_required('Administrador')
 def create_producto():
     data = request.get_json()
     producto = Productos(
@@ -87,6 +112,7 @@ def create_producto():
 #* Eliminar producto 
     
 @productos_bp.route('/<int:id>', methods=['DELETE'])
+@token_required
 def delete_producto(id):
     producto = Productos.get_by_id(id)
     if producto:

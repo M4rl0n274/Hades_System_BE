@@ -4,9 +4,15 @@ from src.models.clientes import Clientes
 from src.models.productos import Productos
 #importar todas las rutas
 from src.routes import all_blueprints
+#jwt
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 app = Flask(__name__)
+
+app.config['JWT_SECRET_KEY'] = os.getenv ('JWT_SECRET_KEY')
 
 #crear la base de datos de los modelos
 Base.metadata.create_all(engine)
