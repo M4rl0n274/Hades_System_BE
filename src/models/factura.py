@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, DateTime
+from sqlalchemy import Column, Integer, DateTime,func
 from sqlalchemy import Numeric, ForeignKey
 from src.models import Base, session
 
@@ -42,3 +42,15 @@ class Factura(Base):
         
     def to_dict(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
+    
+    
+    
+    #Paginación
+
+    def to_dict(self):
+        return {column.name: getattr(self, column.name) for column in self.__table__.columns}     
+        
+    def paginate(page=1, per_page=5):
+        total = (session.query(func.count(Factura.id)).scalar())
+        factura = session.query(Factura).offset((page - 1) * per_page).limit(per_page).all()
+        return factura, total

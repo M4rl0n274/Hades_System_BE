@@ -1,29 +1,54 @@
 from flask import Blueprint, request, jsonify
 from src.models.vendedores import Vendedor
+from src.utils.auth import token_required, rol_required
 
 vendedores_bp = Blueprint('vendedores', __name__)
 
 #? Obtener todos los vendedores
 @vendedores_bp.route('/', methods=['GET'])
+@token_required
+@rol_required('Administrador')
+
 def get_vendedores():
+    #paginación
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=5, type=int)
 
-    vendedores = Vendedor.get()
-    vendedores_list = []
+    vendedores, total = Vendedor.paginate(page=page, per_page=per_page)
 
-    for vendedor in vendedores:
-        vendedores_list.append({
-            'id': vendedor.id,
-            'nombre': vendedor.nombre,
-            'apellido': vendedor.apellido,
-            'documento_identidad': vendedor.documento_identidad,
-            'correo': vendedor.correo
-        })
+    total_pages = (total + per_page - 1) // per_page  # Calcular el número total de páginas
 
-    return jsonify(vendedores_list), 200
+    return jsonify({
+        'data': [vendedores.to_dict() for vendedores in vendedores],
+        'meta' : {
+            'page': page,
+            'per_page': per_page,
+            'total': total,
+            'total_pages': total_pages,
+            'has_next': page < total_pages,
+            'has_prev': page > 1
+        }
+    }), 200
+
+
+# def get_vendedores():
+#     vendedores = Vendedor.get()
+#     vendedores_list = []
+#     for vendedor in vendedores:
+#         vendedores_list.append({
+#             'id': vendedor.id,
+#             'nombre': vendedor.nombre,
+#             'apellido': vendedor.apellido,
+#             'documento_identidad': vendedor.documento_identidad,
+#             'correo': vendedor.correo
+#         })
+#     return jsonify(vendedores_list), 200
 
 
 #? Obtener vendedor por ID
 @vendedores_bp.route('/<int:id>', methods=['GET'])
+@token_required
+@rol_required('Administrador')
 def get_vendedor(id):
 
     vendedor = Vendedor.get_by_id(id)
@@ -44,6 +69,8 @@ def get_vendedor(id):
 
 #? Crear vendedor
 @vendedores_bp.route('/', methods=['POST'])
+@token_required
+@rol_required('Administrador')
 def create_vendedor():
 
     data = request.get_json()
@@ -112,6 +139,8 @@ def create_vendedor():
 
 #? Actualizar vendedor
 @vendedores_bp.route('/<int:id>', methods=['PUT'])
+@token_required
+@rol_required('Administrador')
 def update_vendedor(id):
 
     vendedor = Vendedor.get_by_id(id)
@@ -178,6 +207,8 @@ def update_vendedor(id):
 
 #? Eliminar vendedor
 @vendedores_bp.route('/<int:id>', methods=['DELETE'])
+@token_required
+@rol_required('Administrador')
 def delete_vendedor(id):
 
     vendedor = Vendedor.get_by_id(id)

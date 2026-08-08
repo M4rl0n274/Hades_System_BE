@@ -1,33 +1,59 @@
 from flask import Blueprint, request, jsonify
-from src.models.usuarios import Usuario
+from src.models.usuarios import Usuarios
 from sqlalchemy.exc import IntegrityError
+from src.utils.auth import token_required, rol_required
 
 usuarios_bp = Blueprint('usuarios', __name__)
 
 #? Obtener usuarios
 @usuarios_bp.route('/', methods=['GET'])
+@token_required
+@rol_required('Administrador')
+
 def get_usuarios():
+    #paginación
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=5, type=int)
 
-    usuarios = Usuario.get()
-    usuarios_list = []
+    usuarios, total = Usuarios.paginate(page=page, per_page=per_page)
 
-    for usuario in usuarios:
-        usuarios_list.append({
-            'id': usuario.id,
-            'nombre': usuario.nombre,
-            'apellido': usuario.apellido,
-            'correo': usuario.correo,
-            'documento_identidad': usuario.documento_identidad,
-            'rol': usuario.rol
-        })
+    total_pages = (total + per_page - 1) // per_page  # Calcular el número total de páginas
 
-    return jsonify(usuarios_list), 200
+    return jsonify({
+        'data': [usuarios.to_dict() for usuarios in usuarios],
+        'meta' : {
+            'page': page,
+            'per_page': per_page,
+            'total': total,
+            'total_pages': total_pages,
+            'has_next': page < total_pages,
+            'has_prev': page > 1
+        }
+    }), 200
+
+
+
+# def get_usuarios():
+#     usuarios = Usuarios.get()
+#     usuarios_list = []
+#     for usuario in usuarios:
+#         usuarios_list.append({
+#             'id': usuario.id,
+#             'nombre': usuario.nombre,
+#             'apellido': usuario.apellido,
+#             'correo': usuario.correo,
+#             'documento_identidad': usuario.documento_identidad,
+#             'rol': usuario.rol
+#         })
+#     return jsonify(usuarios_list), 200
 
 #? Obtener usuarios por ID
 @usuarios_bp.route('/<int:id>', methods=['GET'])
+@token_required
+@rol_required('Administrador')
 def get_usuario(id):
 
-    usuario = Usuario.get_by_id(id)
+    usuario = Usuarios.get_by_id(id)
 
     if usuario:
         return jsonify({
@@ -45,6 +71,8 @@ def get_usuario(id):
     
 #?  Crear Usuario
 @usuarios_bp.route('/', methods=['POST'])
+@token_required
+@rol_required('Administrador')
 def create_usuario():
 
     data = request.get_json()
@@ -64,7 +92,7 @@ def create_usuario():
                 'message': f'El campo {campo} es obligatorio'
             }), 400
 
-    usuario = Usuario(
+    usuario = Usuarios(
         nombre=data['nombre'],
         apellido=data['apellido'],
         correo=data['correo'],
@@ -105,9 +133,11 @@ def create_usuario():
         
 #? Actualizar usuario
 @usuarios_bp.route('/<int:id>', methods=['PUT'])
+@token_required
+@rol_required('Administrador')
 def update_usuario(id):
 
-    usuario = Usuario.get_by_id(id)
+    usuario = Usuarios.get_by_id(id)
 
     if not usuario:
         return jsonify({
@@ -137,9 +167,11 @@ def update_usuario(id):
         
 #? Eliminar usuario
 @usuarios_bp.route('/<int:id>', methods=['DELETE'])
+@token_required
+@rol_required('Administrador')
 def delete_usuario(id):
 
-    usuario = Usuario.get_by_id(id)
+    usuario = Usuarios.get_by_id(id)
 
     if not usuario:
         return jsonify({

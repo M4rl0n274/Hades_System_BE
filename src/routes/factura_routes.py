@@ -5,25 +5,55 @@ from src.models.factura import Factura
 from src.models.detalle_factura import DetalleFactura
 from src.models.productos import Productos
 from src.models import session
+from src.utils.auth import token_required, rol_required
 
 factura_bp = Blueprint('factura', __name__)
 
 
 #? Obtener todas las facturas
 @factura_bp.route('/', methods=['GET'])
-def get_facturas():
+@token_required
+@rol_required('Administrador', 'Vendedor')
 
-    facturas = Factura.get()
+def get_factura():
+    #paginación
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=5, type=int)
 
-    return jsonify([
-        factura.to_dict()
-        for factura in facturas
-    ]), 200
+    factura, total = Factura.paginate(page=page, per_page=per_page)
+
+    total_pages = (total + per_page - 1) // per_page  # Calcular el número total de páginas
+
+    return jsonify({
+        'data': [factura.to_dict() for factura in factura],
+        'meta' : {
+            'page': page,
+            'per_page': per_page,
+            'total': total,
+            'total_pages': total_pages,
+            'has_next': page < total_pages,
+            'has_prev': page > 1
+        }
+    }), 200
+
+
+
+
+
+
+# def get_facturas():
+#     facturas = Factura.get()
+#     return jsonify([
+#         factura.to_dict()
+#         for factura in facturas
+#     ]), 200
 
 
 #? Obtener factura por ID
 @factura_bp.route('/<int:id>', methods=['GET'])
-def get_factura(id):
+@token_required
+@rol_required('Administrador', 'Vendedor')
+def get_facturas(id):
 
     factura = Factura.get_by_id(id)
 
@@ -37,6 +67,8 @@ def get_factura(id):
 
 #? Crear factura
 @factura_bp.route('/', methods=['POST'])
+@token_required
+@rol_required('Administrador', 'Vendedor')
 def create_factura():
 
     data = request.get_json()
@@ -135,6 +167,8 @@ def create_factura():
 
 #? Eliminar factura
 @factura_bp.route('/<int:id>', methods=['DELETE'])
+@token_required
+@rol_required('Administrador')
 def delete_factura(id):
 
     factura = Factura.get_by_id(id)
