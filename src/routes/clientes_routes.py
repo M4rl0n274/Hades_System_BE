@@ -12,7 +12,7 @@ def get_clientes():
     
     #paginación
     page = request.args.get('page', default=1, type=int)
-    per_page = request.args.get('per_page', default=5, type=int)
+    per_page = request.args.get('per_page', default=100, type=int)
 
     clientes, total = Clientes.paginate(page=page, per_page=per_page)
 
