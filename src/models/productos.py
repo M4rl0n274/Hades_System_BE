@@ -49,3 +49,9 @@ class Productos(Base):
         total = (session.query(func.count(Productos.id)).scalar())
         productos = session.query(Productos).offset((page - 1) * per_page).limit(per_page).all()
         return productos, total
+    
+    
+    
+    
+    
+    

@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
+from sqlalchemy import text
 
 from src.models.factura import Factura
 from src.models.detalle_factura import DetalleFactura
@@ -16,16 +17,29 @@ factura_bp = Blueprint('factura', __name__)
 @rol_required('Administrador', 'Vendedor')
 
 def get_factura():
-    #paginación
     page = request.args.get('page', default=1, type=int)
     per_page = request.args.get('per_page', default=5, type=int)
-
     factura, total = Factura.paginate(page=page, per_page=per_page)
+    total_pages = (total + per_page - 1) // per_page
 
-    total_pages = (total + per_page - 1) // per_page  # Calcular el número total de páginas
+    facturas_list = []
+    for f in factura:
+        f_dict = f.to_dict()
+        
+        # Consultar nombres directamente
+        cliente = session.execute(text("SELECT nombre, apellido FROM clientes WHERE id = :id"), {"id": f.id_cliente}).fetchone()
+        f_dict['cliente_nombre'] = f"{cliente[0]} {cliente[1]}" if cliente else "Desconocido"
+        
+        vendedor = session.execute(text("SELECT nombre, apellido FROM vendedores WHERE id = :id"), {"id": f.id_vendedor}).fetchone()
+        f_dict['vendedor_nombre'] = f"{vendedor[0]} {vendedor[1]}" if vendedor else "Desconocido"
+        
+        usuario = session.execute(text("SELECT nombre, apellido FROM usuarios WHERE id = :id"), {"id": f.id_usuario}).fetchone()
+        f_dict['usuario_nombre'] = f"{usuario[0]} {usuario[1]}" if usuario else "Desconocido"
+        
+        facturas_list.append(f_dict)
 
     return jsonify({
-        'data': [factura.to_dict() for factura in factura],
+        'data': facturas_list,
         'meta' : {
             'page': page,
             'per_page': per_page,
@@ -38,23 +52,49 @@ def get_factura():
 
 
 
-
-
-
-# def get_facturas():
-#     facturas = Factura.get()
-#     return jsonify([
-#         factura.to_dict()
-#         for factura in facturas
-#     ]), 200
-
-
 #? Obtener factura por ID
 @factura_bp.route('/<int:id>', methods=['GET'])
 @token_required
 @rol_required('Administrador', 'Vendedor')
 def get_facturas(id):
+    factura = Factura.get_by_id(id)
 
+    if not factura:
+        return jsonify({'message': 'Factura no encontrada'}), 404
+
+    factura_data = factura.to_dict()
+    
+    # Encabezado (Nombres)
+    cliente = session.execute(text("SELECT nombre, apellido FROM clientes WHERE id = :id"), {"id": factura.id_cliente}).fetchone()
+    factura_data['cliente_nombre'] = f"{cliente[0]} {cliente[1]}" if cliente else "Desconocido"
+    
+    vendedor = session.execute(text("SELECT nombre, apellido FROM vendedores WHERE id = :id"), {"id": factura.id_vendedor}).fetchone()
+    factura_data['vendedor_nombre'] = f"{vendedor[0]} {vendedor[1]}" if vendedor else "Desconocido"
+    
+    usuario = session.execute(text("SELECT nombre, apellido FROM usuarios WHERE id = :id"), {"id": factura.id_usuario}).fetchone()
+    factura_data['usuario_nombre'] = f"{usuario[0]} {usuario[1]}" if usuario else "Desconocido"
+
+    # Detalles con nombres de producto
+    try:
+        detalles = session.query(DetalleFactura).filter_by(id_factura=id).all()
+        detalles_list = []
+        for d in detalles:
+            d_dict = d.to_dict()
+            prod = session.execute(text("SELECT nombre_producto FROM productos WHERE id = :id"), {"id": d.id_producto}).fetchone()
+            d_dict['producto_nombre'] = prod[0] if prod else "Desconocido"
+            detalles_list.append(d_dict)
+        factura_data['detalles'] = detalles_list
+    except Exception as e:
+        factura_data['detalles'] = []
+
+    return jsonify(factura_data), 200
+
+
+#? Actualizar encabezado de factura
+@factura_bp.route('/<int:id>', methods=['PUT'])
+@token_required
+@rol_required('Administrador')
+def update_factura(id):
     factura = Factura.get_by_id(id)
 
     if not factura:
@@ -62,7 +102,28 @@ def get_facturas(id):
             'message': 'Factura no encontrada'
         }), 404
 
-    return jsonify(factura.to_dict()), 200
+    data = request.get_json()
+
+    try:
+        # Actualizamos solo los datos del encabezado. 
+        # Los totales y productos se modifican desde detalle_factura_routes.py
+        factura.id_cliente = data.get('id_cliente', factura.id_cliente)
+        factura.id_vendedor = data.get('id_vendedor', factura.id_vendedor)
+        factura.id_usuario = data.get('id_usuario', factura.id_usuario)
+
+        session.commit()
+
+        return jsonify({
+            'message': 'Factura actualizada exitosamente',
+            'factura': factura.to_dict()
+        }), 200
+
+    except Exception as e:
+        session.rollback()
+        return jsonify({
+            'message': str(e)
+        }), 500
+
 
 
 #? Crear factura
