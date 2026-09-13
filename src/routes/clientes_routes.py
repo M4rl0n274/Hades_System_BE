@@ -7,7 +7,7 @@ clientes_bp = Blueprint('clientes', __name__)
 # Obtener todos los clientes
 @clientes_bp.route('/', methods=['GET'])
 #decorado (@) para solicitar el jwt
-@token_required
+#@token_required
 def get_clientes():
     
     #paginación
