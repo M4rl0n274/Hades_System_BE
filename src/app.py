@@ -1,4 +1,6 @@
 from flask import Flask
+#Se añade CORS para que las peticiones de IONIC no sean rechazadas
+from flask_cors import CORS
 from src.models import Base, engine
 from src.models.categorias import Categorias 
 from src.models.clientes import Clientes 
@@ -17,6 +19,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+# se añade CORS y App.run para habilitrar los CORS en todas las rutas y probar 
+# CORS(app, resources={r"/api/*": {"origins": "*"}})
+# app.run(host='0.0.0.0', port=5000, debug=True)
 
 app.config['JWT_SECRET_KEY'] = os.getenv ('JWT_SECRET_KEY')
 

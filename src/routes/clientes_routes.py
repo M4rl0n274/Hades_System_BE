@@ -10,7 +10,6 @@ clientes_bp = Blueprint('clientes', __name__)
 @token_required
 @rol_required('Administrador', 'Vendedor')
 
-
 def get_clientes():
     #paginación
     page = request.args.get('page', default=1, type=int)
