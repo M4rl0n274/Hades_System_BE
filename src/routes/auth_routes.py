@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from src.models.usuarios import Usuarios
-from src.utils.auth import generar_token, token_required
+from src.models.clientes import Clientes
+from src.utils.auth import generar_token, token_required, g
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -48,31 +49,40 @@ def register():
     }), 201
 
 
+
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json() or {}
-    correo = data.get('correo')
-    password = data.get('password')
+    correo = data.get('correo', '').strip().lower()
+    password = data.get('password', '')
 
     if not correo or not password:
         return jsonify({'message': 'Correo y contraseña son obligatorios'}), 400
 
-    usuario = Usuarios.get_by_email(correo)
+    # 1. Buscar en Usuarios (Administrador, Vendedor, Usuario)
+    entidad = Usuarios.get_by_email(correo)
+    
+    # 2. Si no existe, buscar en Clientes
+    if not entidad:
+        entidad = Clientes.get_by_email(correo)
 
-    # mismo mensaje en ambos casos: no le regales al atacante
-    # la información de qué correos existen
-    if not usuario or not usuario.verificar_password(password):
+    # 3. Validar credenciales
+    if not entidad or not entidad.verificar_password(password):
         return jsonify({'message': 'Credenciales inválidas'}), 401
 
+    # 4. Generar Token usando el objeto de la entidad (ahora ambos tienen la propiedad .rol)
+    token = generar_token(entidad)
+
+    usuario_dict = entidad.to_dict()
+
     return jsonify({
-        'access_token': generar_token(usuario),
-        'token_type': 'Bearer',
-        'expires_in': 28800,
-        'usuario': usuario.to_dict()
+        'access_token': token,
+        'usuario': usuario_dict
     }), 200
 
 
 @auth_bp.route('/me', methods=['GET'])
 @token_required
 def me():
+    usuario_data = getattr(g, 'usuario', {})
     return jsonify(request.usuario.to_dict()), 200

@@ -50,7 +50,23 @@ class Factura(Base):
     def to_dict(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}     
         
-    def paginate(page=1, per_page=5):
-        total = (session.query(func.count(Factura.id)).scalar())
-        factura = session.query(Factura).offset((page - 1) * per_page).limit(per_page).all()
-        return factura, total
+    def paginate(page=1, per_page=5, id_cliente=None, q=None):
+            query = session.query(Factura)
+
+            # 1. Filtrar por cliente si se especifica id_cliente
+            if id_cliente:
+                query = query.filter(Factura.id_cliente == id_cliente)
+
+            # 2. Filtrar por búsqueda 'q' si viene un número de factura
+            if q and str(q).strip():
+                term = str(q).strip()
+                if term.isdigit():
+                    query = query.filter(Factura.id == int(term))
+
+            # 3. Conteo total de registros filtrados
+            total = query.count()
+
+            # 4. Obtener los registros paginados (ordenados por fecha o ID descendente)
+            facturas = query.order_by(Factura.id.desc()).offset((page - 1) * per_page).limit(per_page).all()
+
+            return facturas, total

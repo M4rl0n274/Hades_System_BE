@@ -8,7 +8,7 @@ productos_bp = Blueprint('productos', __name__)
 #? Obtener todos los producto
 @productos_bp.route('/', methods=['GET'])
 @token_required
-@rol_required('Administrador', 'Vendedor')
+@rol_required('Administrador', 'Vendedor', 'Usuario')
 
 def get_productos():
     #paginación

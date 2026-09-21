@@ -2,9 +2,10 @@ from datetime import datetime, timedelta, timezone
 from functools import wraps
 
 import jwt
-from flask import current_app, request, jsonify
+from flask import current_app, request, jsonify, g
 
 from src.models.usuarios import Usuarios
+from src.models.clientes import Clientes
 
 
 
@@ -22,7 +23,7 @@ def generar_token(usuario, horas=8):
 
 #verifica si se recibio un token y permite proteger una ruta y solicitarlo
 def token_required(f):
-    """Protege una ruta. Deja el usuario en request.usuario."""
+    """Protege una ruta. Deja la instancia en request.usuario y sus datos en g.usuario."""
     @wraps(f)
     def decorada(*args, **kwargs):
         auth = request.headers.get('Authorization', '')
@@ -40,11 +41,32 @@ def token_required(f):
         except jwt.InvalidTokenError:
             return jsonify({'message': 'Token inválido'}), 401
 
-        usuario = Usuarios.get_by_id(int(payload['sub']))
-        if not usuario:
-            return jsonify({'message': 'Usuario no encontrado'}), 401
+        sub_id = int(payload['sub'])
+        rol_token = payload.get('rol')
 
+        usuario = None
+
+        # 1. Si el payload especifica el rol 'Cliente', buscar directamente en la tabla Clientes
+        if rol_token == 'Cliente':
+            usuario = Clientes.get_by_id(sub_id)
+        else:
+            # 2. Si no, buscar primero en Usuarios y como alternativa en Clientes
+            usuario = Usuarios.get_by_id(sub_id)
+            if not usuario:
+                usuario = Clientes.get_by_id(sub_id)
+
+        if not usuario:
+            return jsonify({'message': 'Usuario o cliente no encontrado'}), 401
+
+        # Mantiene el objeto ORM en request.usuario para retrocompatibilidad
         request.usuario = usuario
+
+        # Asigna el diccionario en g.usuario para que g.usuario.get('rol') y g.usuario.get('id') funcionen
+        if hasattr(usuario, 'to_dict'):
+            g.usuario = usuario.to_dict()
+        else:
+            g.usuario = usuario
+
         return f(*args, **kwargs)
 
     return decorada

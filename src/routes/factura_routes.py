@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify,g
 from datetime import datetime
 from sqlalchemy import text
 
@@ -14,33 +14,54 @@ factura_bp = Blueprint('factura', __name__)
 #? Obtener todas las facturas
 @factura_bp.route('/', methods=['GET'])
 @token_required
-@rol_required('Administrador', 'Vendedor')
-
 def get_factura():
     page = request.args.get('page', default=1, type=int)
     per_page = request.args.get('per_page', default=5, type=int)
-    factura, total = Factura.paginate(page=page, per_page=per_page)
-    total_pages = (total + per_page - 1) // per_page
+    q = request.args.get('q', '').strip()
+    id_cliente = request.args.get('id_cliente', type=int)
+
+    # Lectura segura del usuario almacenado en 'g'
+    usuario_actual = getattr(g, 'usuario', {}) or {}
+    
+    # Manejar si es un diccionario o una instancia de modelo
+    rol = usuario_actual.get('rol') if isinstance(usuario_actual, dict) else getattr(usuario_actual, 'rol', None)
+    user_id = usuario_actual.get('id') if isinstance(usuario_actual, dict) else getattr(usuario_actual, 'id', None)
+
+    # Control de seguridad: Si es Cliente, forzar a consultar solo sus facturas
+    if rol == 'Cliente':
+        id_cliente = user_id
+
+    # Resto de tu lógica de consulta y paginación...
+    factura, total = Factura.paginate(page=page, per_page=per_page, id_cliente=id_cliente, q=q)
+    total_pages = (total + per_page - 1) // per_page if total > 0 else 1
 
     facturas_list = []
     for f in factura:
         f_dict = f.to_dict()
         
-        # Consultar nombres directamente
-        cliente = session.execute(text("SELECT nombre, apellido FROM clientes WHERE id = :id"), {"id": f.id_cliente}).fetchone()
+        cliente = session.execute(
+            text("SELECT nombre, apellido FROM clientes WHERE id = :id"), 
+            {"id": f.id_cliente}
+        ).fetchone()
         f_dict['cliente_nombre'] = f"{cliente[0]} {cliente[1]}" if cliente else "Desconocido"
         
-        vendedor = session.execute(text("SELECT nombre, apellido FROM vendedores WHERE id = :id"), {"id": f.id_vendedor}).fetchone()
+        vendedor = session.execute(
+            text("SELECT nombre, apellido FROM vendedores WHERE id = :id"), 
+            {"id": f.id_vendedor}
+        ).fetchone()
         f_dict['vendedor_nombre'] = f"{vendedor[0]} {vendedor[1]}" if vendedor else "Desconocido"
         
-        usuario = session.execute(text("SELECT nombre, apellido FROM usuarios WHERE id = :id"), {"id": f.id_usuario}).fetchone()
+        usuario = session.execute(
+            text("SELECT nombre, apellido FROM usuarios WHERE id = :id"), 
+            {"id": f.id_usuario}
+        ).fetchone()
         f_dict['usuario_nombre'] = f"{usuario[0]} {usuario[1]}" if usuario else "Desconocido"
         
         facturas_list.append(f_dict)
 
     return jsonify({
         'data': facturas_list,
-        'meta' : {
+        'meta': {
             'page': page,
             'per_page': per_page,
             'total': total,
@@ -49,7 +70,6 @@ def get_factura():
             'has_prev': page > 1
         }
     }), 200
-
 
 
 #? Obtener factura por ID

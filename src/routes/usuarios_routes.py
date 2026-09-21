@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from src.models.usuarios import Usuarios
 from sqlalchemy.exc import IntegrityError
+from werkzeug.security import generate_password_hash
 from src.utils.auth import token_required, rol_required
 
 usuarios_bp = Blueprint('usuarios', __name__)
@@ -9,18 +10,15 @@ usuarios_bp = Blueprint('usuarios', __name__)
 @usuarios_bp.route('/', methods=['GET'])
 @token_required
 @rol_required('Administrador')
-
 def get_usuarios():
-    #paginación
     page = request.args.get('page', default=1, type=int)
     per_page = request.args.get('per_page', default=5, type=int)
 
     usuarios, total = Usuarios.paginate(page=page, per_page=per_page)
-
-    total_pages = (total + per_page - 1) // per_page  # Calcular el número total de páginas
+    total_pages = (total + per_page - 1) // per_page
 
     return jsonify({
-        'data': [usuarios.to_dict() for usuarios in usuarios],
+        'data': [u.to_dict() for u in usuarios],
         'meta' : {
             'page': page,
             'per_page': per_page,
@@ -32,27 +30,11 @@ def get_usuarios():
     }), 200
 
 
-
-# def get_usuarios():
-#     usuarios = Usuarios.get()
-#     usuarios_list = []
-#     for usuario in usuarios:
-#         usuarios_list.append({
-#             'id': usuario.id,
-#             'nombre': usuario.nombre,
-#             'apellido': usuario.apellido,
-#             'correo': usuario.correo,
-#             'documento_identidad': usuario.documento_identidad,
-#             'rol': usuario.rol
-#         })
-#     return jsonify(usuarios_list), 200
-
-#? Obtener usuarios por ID
+#? Obtener usuario por ID
 @usuarios_bp.route('/<int:id>', methods=['GET'])
 @token_required
 @rol_required('Administrador')
 def get_usuario(id):
-
     usuario = Usuarios.get_by_id(id)
 
     if usuario:
@@ -69,13 +51,13 @@ def get_usuario(id):
         'message': 'Usuario no encontrado'
     }), 404
     
-#?  Crear Usuario
+
+#? Crear Usuario
 @usuarios_bp.route('/', methods=['POST'])
 @token_required
 @rol_required('Administrador')
 def create_usuario():
-
-    data = request.get_json()
+    data = request.get_json() or {}
 
     campos_requeridos = [
         'nombre',
@@ -87,39 +69,21 @@ def create_usuario():
     ]
 
     for campo in campos_requeridos:
-        if campo not in data:
+        if campo not in data or str(data[campo]).strip() == '':
             return jsonify({
                 'message': f'El campo {campo} es obligatorio'
             }), 400
 
-    usuario = Usuarios(
-        nombre=data['nombre'],
-        apellido=data['apellido'],
-        correo=data['correo'],
-        password=data['password'],
-        documento_identidad=data['documento_identidad'],
-        rol=data['rol']
-    )
-
-    if usuario.nombre.strip() == '':
-        return jsonify({'message': 'El nombre es obligatorio'}), 400
-
-    if usuario.apellido.strip() == '':
-        return jsonify({'message': 'El apellido es obligatorio'}), 400
-
-    if usuario.correo.strip() == '':
-        return jsonify({'message': 'El correo es obligatorio'}), 400
-
-    if usuario.password.strip() == '':
-        return jsonify({'message': 'La contraseña es obligatoria'}), 400
-
-    if usuario.documento_identidad.strip() == '':
-        return jsonify({'message': 'El documento es obligatorio'}), 400
-
-    if usuario.rol.strip() == '':
-        return jsonify({'message': 'El rol es obligatorio'}), 400
-
     try:
+        usuario = Usuarios(
+            nombre=data['nombre'].strip(),
+            apellido=data['apellido'].strip(),
+            correo=data['correo'].strip(),
+            password=data['password'],
+            documento_identidad=data['documento_identidad'].strip(),
+            rol=data['rol'].strip()
+        )
+
         usuario.save()
 
         return jsonify({
@@ -131,12 +95,12 @@ def create_usuario():
             'message': 'El correo o documento ya existen'
         }), 400
         
+
 #? Actualizar usuario
 @usuarios_bp.route('/<int:id>', methods=['PUT'])
 @token_required
 @rol_required('Administrador')
 def update_usuario(id):
-
     usuario = Usuarios.get_by_id(id)
 
     if not usuario:
@@ -144,14 +108,17 @@ def update_usuario(id):
             'message': 'Usuario no encontrado'
         }), 404
 
-    data = request.get_json()
+    data = request.get_json() or {}
 
-    usuario.nombre = data.get('nombre', usuario.nombre)
-    usuario.apellido = data.get('apellido', usuario.apellido)
-    usuario.correo = data.get('correo', usuario.correo)
-    usuario.password = data.get('password', usuario.password)
-    usuario.documento_identidad = data.get('documento_identidad',usuario.documento_identidad)
-    usuario.rol = data.get('rol', usuario.rol)
+    usuario.nombre = data.get('nombre', usuario.nombre).strip()
+    usuario.apellido = data.get('apellido', usuario.apellido).strip()
+    usuario.correo = data.get('correo', usuario.correo).strip()
+    usuario.documento_identidad = data.get('documento_identidad', usuario.documento_identidad).strip()
+    usuario.rol = data.get('rol', usuario.rol).strip()
+
+    # Si se envía contraseña, se re-genera el hash
+    if 'password' in data and str(data['password']).strip() != '':
+        usuario.password_hash = generate_password_hash(data['password'])
 
     try:
         usuario.save()
@@ -164,13 +131,13 @@ def update_usuario(id):
         return jsonify({
             'message': 'El correo o documento ya existen'
         }), 400
-        
+
+
 #? Eliminar usuario
 @usuarios_bp.route('/<int:id>', methods=['DELETE'])
 @token_required
 @rol_required('Administrador')
 def delete_usuario(id):
-
     usuario = Usuarios.get_by_id(id)
 
     if not usuario:
@@ -183,4 +150,3 @@ def delete_usuario(id):
     return jsonify({
         'message': 'Usuario eliminado exitosamente'
     }), 200
-

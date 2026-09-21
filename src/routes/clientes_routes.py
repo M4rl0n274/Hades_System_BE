@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from src.models.clientes import Clientes
 from src.utils.auth import token_required, rol_required
+from werkzeug.security import generate_password_hash
 
 clientes_bp = Blueprint('clientes', __name__)
 
@@ -92,7 +93,7 @@ def get_cliente(id):
 @rol_required('Administrador', 'Vendedor')
 def create_cliente():
 
-    data = request.get_json()
+    data = request.get_json() or {}
 
     campos_requeridos = [
         'nombre',
@@ -111,26 +112,29 @@ def create_cliente():
                 'message': f'El campo {campo} es obligatorio'
             }), 400
 
-    if data['nombre'].strip() == '':
+    if str(data['nombre']).strip() == '':
         return jsonify({'message': 'El nombre es obligatorio'}), 400
 
-    if data['apellido'].strip() == '':
+    if str(data['apellido']).strip() == '':
         return jsonify({'message': 'El apellido es obligatorio'}), 400
 
     if int(data['edad']) <= 0:
         return jsonify({'message': 'La edad debe ser mayor a cero'}), 400
 
-    if data['correo'].strip() == '':
+    if str(data['correo']).strip() == '':
         return jsonify({'message': 'El correo es obligatorio'}), 400
 
-    if data['documentoIdentidad'].strip() == '':
+    if str(data['documentoIdentidad']).strip() == '':
         return jsonify({'message': 'El documento es obligatorio'}), 400
 
-    if data['direccion'].strip() == '':
+    if str(data['direccion']).strip() == '':
         return jsonify({'message': 'La dirección es obligatoria'}), 400
 
-    if data['telefono'].strip() == '':
+    if str(data['telefono']).strip() == '':
         return jsonify({'message': 'El teléfono es obligatorio'}), 400
+
+    # Extraer contraseña (si viene en la petición POST, si no será None)
+    password_recibido = data.get('password')
 
     cliente = Clientes(
         nombre=data['nombre'],
@@ -140,7 +144,8 @@ def create_cliente():
         documentoIdentidad=data['documentoIdentidad'],
         direccion=data['direccion'],
         telefono=data['telefono'],
-        FechaDeNacimiento=data['FechaDeNacimiento']
+        FechaDeNacimiento=data['FechaDeNacimiento'],
+        password=password_recibido  # <-- Pasa el argumento opcional al constructor
     )
 
     try:
@@ -180,7 +185,7 @@ def update_cliente(id):
             'message': 'Cliente no encontrado'
         }), 404
 
-    data = request.get_json()
+    data = request.get_json() or {}
 
     cliente.nombre = data.get('nombre', cliente.nombre)
     cliente.apellido = data.get('apellido', cliente.apellido)
@@ -203,10 +208,16 @@ def update_cliente(id):
         cliente.FechaDeNacimiento
     )
 
-    if cliente.nombre.strip() == '':
+    # Lógica de contraseña opcional: se actualiza solo si fue enviada y no está vacía
+    password_nueva = data.get('password')
+    if password_nueva and str(password_nueva).strip() != '':
+        cliente.password_hash = generate_password_hash(str(password_nueva).strip())
+
+    # Validaciones originales
+    if str(cliente.nombre).strip() == '':
         return jsonify({'message': 'El nombre es obligatorio'}), 400
 
-    if cliente.apellido.strip() == '':
+    if str(cliente.apellido).strip() == '':
         return jsonify({'message': 'El apellido es obligatorio'}), 400
 
     if int(cliente.edad) <= 0:
