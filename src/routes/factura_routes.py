@@ -38,7 +38,8 @@ def get_factura():
     facturas_list = []
     for f in factura:
         f_dict = f.to_dict()
-        
+        f_dict['fecha'] = f_dict.get('fecha_factura')
+
         cliente = session.execute(
             text("SELECT nombre, apellido FROM clientes WHERE id = :id"), 
             {"id": f.id_cliente}
@@ -75,19 +76,37 @@ def get_factura():
 #? Obtener factura por ID
 @factura_bp.route('/<int:id>', methods=['GET'])
 @token_required
-@rol_required('Administrador', 'Vendedor')
+@rol_required('Administrador', 'Vendedor', 'Cliente')
 def get_facturas(id):
     factura = Factura.get_by_id(id)
 
     if not factura:
         return jsonify({'message': 'Factura no encontrada'}), 404
 
+    # Un Cliente solo puede ver SU PROPIA factura.
+    usuario_actual = getattr(g, 'usuario', {}) or {}
+    rol = usuario_actual.get('rol') if isinstance(usuario_actual, dict) else getattr(usuario_actual, 'rol', None)
+    user_id = usuario_actual.get('id') if isinstance(usuario_actual, dict) else getattr(usuario_actual, 'id', None)
+
+    if rol == 'Cliente' and factura.id_cliente != user_id:
+        return jsonify({'message': 'No tienes permiso para ver esta factura.'}), 403
+
     factura_data = factura.to_dict()
-    
-    # Encabezado (Nombres)
-    cliente = session.execute(text("SELECT nombre, apellido FROM clientes WHERE id = :id"), {"id": factura.id_cliente}).fetchone()
-    factura_data['cliente_nombre'] = f"{cliente[0]} {cliente[1]}" if cliente else "Desconocido"
-    
+    # Alias: el frontend espera 'fecha', el modelo guarda 'fecha_factura'.
+    factura_data['fecha'] = factura_data.get('fecha_factura')
+
+    # Encabezado (Nombres + documento del cliente, para el PDF)
+    cliente = session.execute(
+        text("SELECT nombre, apellido, documentoIdentidad FROM clientes WHERE id = :id"),
+        {"id": factura.id_cliente}
+    ).fetchone()
+    if cliente:
+        factura_data['cliente_nombre'] = f"{cliente[0]} {cliente[1]}"
+        factura_data['cliente_documento'] = cliente[2]
+    else:
+        factura_data['cliente_nombre'] = "Desconocido"
+        factura_data['cliente_documento'] = None
+
     vendedor = session.execute(text("SELECT nombre, apellido FROM vendedores WHERE id = :id"), {"id": factura.id_vendedor}).fetchone()
     factura_data['vendedor_nombre'] = f"{vendedor[0]} {vendedor[1]}" if vendedor else "Desconocido"
     

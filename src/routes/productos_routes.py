@@ -32,21 +32,6 @@ def get_productos():
     }), 200
 
 
-# def get_productos():
-#     productos = Productos.get()
-#     productos_list = []
-#     for producto in productos:
-#         productos_list.append({
-#             'id': producto.id,
-#             'id_categoria': producto.id_categoria,
-#             'nombre_producto': producto.nombre_producto,
-#             'descripcion': producto.descripcion,
-#             'valor_unitario': producto.valor_unitario,
-#             'stock': producto.stock,
-#             'codigo': producto.codigo
-#         })
-#     return jsonify(productos_list), 200
-
 
 
 #? Obtener un producto por ID
