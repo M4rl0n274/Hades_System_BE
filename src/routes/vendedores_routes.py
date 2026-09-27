@@ -7,7 +7,7 @@ vendedores_bp = Blueprint('vendedores', __name__)
 #? Obtener todos los vendedores
 @vendedores_bp.route('/', methods=['GET'])
 @token_required
-@rol_required('Administrador')
+@rol_required('Administrador','Vendedor')
 
 def get_vendedores():
     #paginación

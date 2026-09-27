@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from src.models.detalle_factura import DetalleFactura
+from src.models.factura import Factura
 from src.models import session
 from src.utils.auth import token_required, rol_required
 
@@ -7,6 +8,23 @@ detalle_factura_bp = Blueprint(
     'detalle_factura',
     __name__
 )
+
+
+def _recalcular_totales_factura(id_factura):
+    """Recalcula subtotal, iva y total de una factura a partir de la suma
+    de los subtotal_producto de todos sus detalles, y los persiste."""
+    detalles = session.query(DetalleFactura).filter_by(id_factura=id_factura).all()
+
+    subtotal = sum(float(d.subtotal_producto) for d in detalles)
+    iva = subtotal * 0.19
+    total = subtotal + iva
+
+    factura = Factura.get_by_id(id_factura)
+    if factura:
+        factura.subtotal = subtotal
+        factura.iva = iva
+        factura.total = total
+
 
 #? Obtener todos los detalles
 @detalle_factura_bp.route('/', methods=['GET'])
@@ -33,19 +51,6 @@ def get_detalleFactura():
             'has_prev': page > 1
         }
     }), 200
-
-
-
-
-
-
-
-# def get_detalles():
-#     detalles = DetalleFactura.get()
-#     return jsonify([
-#         detalle.to_dict()
-#         for detalle in detalles
-#     ]), 200
 
 
 #? Obtener detalle por ID
@@ -88,16 +93,13 @@ def update_detalle(id):
                 'message': 'Cantidad inválida'
             }), 400
 
-        precio = float(data['precio_unitario'])
-
-        if precio <= 0:
-            return jsonify({
-                'message': 'Precio inválido'
-            }), 400
-
+        #* El precio no se toma del cliente (evita manipulación desde el navegador):
+        #* se conserva el precio_unitario ya guardado en el detalle.
         detalle.cantidad = cantidad
-        detalle.precio_unitario = precio
-        detalle.subtotal_producto = cantidad * precio
+        detalle.subtotal_producto = cantidad * float(detalle.precio_unitario)
+
+        #* Recalcular y persistir los totales de la factura padre
+        _recalcular_totales_factura(detalle.id_factura)
 
         session.commit()
 
@@ -130,7 +132,14 @@ def delete_detalle(id):
 
     try:
 
+        id_factura = detalle.id_factura
+
         detalle.delete()
+
+        #* Recalcular y persistir los totales de la factura padre
+        _recalcular_totales_factura(id_factura)
+
+        session.commit()
 
         return jsonify({
             'message': 'Detalle eliminado correctamente'
