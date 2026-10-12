@@ -3,6 +3,7 @@ from src.models.clientes import Clientes
 from src.utils.auth import token_required, rol_required
 from werkzeug.security import generate_password_hash
 
+
 clientes_bp = Blueprint('clientes', __name__)
 
 #? Obtener todos los clientes
@@ -33,34 +34,6 @@ def get_clientes():
     }), 200
 
 
-
-
-
-
-
-
-
-
-#! anterior metodo para obtener los clientes sin paginación ni JWT
-    # clientes = Clientes.get()
-    # clientes_list = []
-
-    # for cliente in clientes:
-    #     clientes_list.append({
-    #         'id': cliente.id,
-    #         'nombre': cliente.nombre,
-    #         'apellido': cliente.apellido,
-    #         'edad': cliente.edad,
-    #         'correo': cliente.correo,
-    #         'documentoIdentidad': cliente.documentoIdentidad,
-    #         'direccion': cliente.direccion,
-    #         'telefono': cliente.telefono,
-    #         'FechaDeNacimiento': cliente.FechaDeNacimiento
-    #     })
-
-    # return jsonify(clientes_list), 200
-
-
 #? Obtener un cliente por ID
 @clientes_bp.route('/<int:id>', methods=['GET'])
 @token_required
@@ -85,6 +58,7 @@ def get_cliente(id):
         'telefono': cliente.telefono,
         'FechaDeNacimiento': cliente.FechaDeNacimiento
     }), 200
+
 
 
 #? Crear cliente
@@ -133,7 +107,14 @@ def create_cliente():
     if str(data['telefono']).strip() == '':
         return jsonify({'message': 'El teléfono es obligatorio'}), 400
 
-    # Extraer contraseña (si viene en la petición POST, si no será None)
+    # # VALIDACIÓN DE DUPLICADO (Consulta con el método de la clase)
+    # documento = str(data['documentoIdentidad']).strip()
+    # if Clientes.get_by_documento(documento):
+    #     return jsonify({
+    #         'message': f'El documento de identidad {documento} ya se encuentra registrado'
+    #     }), 409
+
+    # Extraer contraseña (opcional)
     password_recibido = data.get('password')
 
     cliente = Clientes(
@@ -145,7 +126,7 @@ def create_cliente():
         direccion=data['direccion'],
         telefono=data['telefono'],
         FechaDeNacimiento=data['FechaDeNacimiento'],
-        password=password_recibido  # <-- Pasa el argumento opcional al constructor
+        password=password_recibido
     )
 
     try:
@@ -170,6 +151,7 @@ def create_cliente():
         return jsonify({
             'message': str(e)
         }), 500
+
 
 
 #? Actualizar cliente

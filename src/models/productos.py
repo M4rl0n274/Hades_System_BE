@@ -11,7 +11,7 @@ class Productos(Base):
     descripcion = Column(String(255))
     valor_unitario = Column(Numeric(10,2), nullable=False)
     stock =Column(Integer, nullable=False)
-    codigo = Column(String(50), unique=True, nullable=False)
+    codigo = Column(String(50), nullable=False)
 
     def __init__(self, id_categoria, nombre_producto,
                  descripcion, valor_unitario,stock, codigo):

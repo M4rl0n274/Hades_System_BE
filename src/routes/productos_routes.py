@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
 from src.models.productos import Productos
 from src.utils.auth import token_required, rol_required
+from sqlalchemy.exc import IntegrityError
+from src.models import session # Asegúrate de importar la sesión como lo haces en facturas_routes.py
 
 
 productos_bp = Blueprint('productos', __name__)
@@ -54,6 +56,7 @@ def get_producto(id):
     else:
         return jsonify({'message': 'Producto no encontrado'}), 404
 
+
 #? Crear un producto
 @productos_bp.route('/', methods=['POST'])
 @token_required
@@ -84,9 +87,17 @@ def create_producto():
         return jsonify({'message': 'El stock del producto no puede ser negativo'}), 400
     if producto.id_categoria <= 0:
         return jsonify({'message': 'La categoría del producto es obligatoria'}), 400
-    #* Guardar el producto y devolver como quedo el producto en la base de datos
-    producto.save()
-    return jsonify({'message': 'Producto creado exitosamente','producto':producto.to_dict()}), 201
+        
+    #* Guardar el producto con manejo de errores para evitar que se congele
+    try:
+        producto.save()
+        return jsonify({'message': 'Producto creado exitosamente','producto':producto.to_dict()}), 201
+    except IntegrityError:
+        session.rollback()
+        return jsonify({'message': 'El código del producto ya está en uso. Por favor, elige otro.'}), 400
+    except Exception as e:
+        session.rollback()
+        return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
  
 #? Eliminar un producto
 @productos_bp.route('/<int:id>', methods=['DELETE'])
@@ -101,7 +112,7 @@ def delete_producto(id):
         return jsonify({'message': 'Producto no encontrado'}), 404
     
 #? editar un producto
-@productos_bp.route('/<int:id>', methods=['PUT'])
+@productos_bp.route('/', methods=['PUT'])
 @token_required
 @rol_required('Administrador')
 def update_producto(id):
@@ -131,9 +142,15 @@ def update_producto(id):
         if producto.id_categoria <= 0:
             return jsonify({'message': 'La categoría del producto es obligatoria'}), 400
         
-
-    
-        producto.save()        
-        return jsonify({'message': 'Producto actualizado exitosamente','producto':producto.to_dict()}), 201
+        #* Guardar el producto editado con manejo de errores
+        try:
+            producto.save()        
+            return jsonify({'message': 'Producto actualizado exitosamente','producto':producto.to_dict()}), 200
+        except IntegrityError:
+            session.rollback()
+            return jsonify({'message': 'El código del producto ya está en uso. Por favor, elige otro.'}), 400
+        except Exception as e:
+            session.rollback()
+            return jsonify({'message': f'Error interno del servidor: {str(e)}'}), 500
     else:
         return jsonify({'message': 'Producto no encontrado'}), 404
