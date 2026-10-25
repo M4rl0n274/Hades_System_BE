@@ -9,8 +9,8 @@ clientes_bp = Blueprint('clientes', __name__)
 #? Obtener todos los clientes
 @clientes_bp.route('/', methods=['GET'])
 #decorado (@) para solicitar el jwt
-@token_required
-@rol_required('Administrador', 'Vendedor')
+# @token_required
+# @rol_required('Administrador', 'Vendedor')
 
 def get_clientes():
     #paginación
@@ -36,8 +36,8 @@ def get_clientes():
 
 #? Obtener un cliente por ID
 @clientes_bp.route('/<int:id>', methods=['GET'])
-@token_required
-@rol_required('Administrador', 'Vendedor')
+# @token_required
+# @rol_required('Administrador', 'Vendedor')
 def get_cliente(id):
 
     cliente = Clientes.get_by_id(id)
@@ -63,8 +63,8 @@ def get_cliente(id):
 
 #? Crear cliente
 @clientes_bp.route('/', methods=['POST'])
-@token_required
-@rol_required('Administrador', 'Vendedor')
+# @token_required
+# @rol_required('Administrador', 'Vendedor')
 def create_cliente():
 
     data = request.get_json() or {}
@@ -156,8 +156,8 @@ def create_cliente():
 
 #? Actualizar cliente
 @clientes_bp.route('/<int:id>', methods=['PUT'])
-@token_required
-@rol_required('Administrador', 'Vendedor')
+# @token_required
+# @rol_required('Administrador', 'Vendedor')
 def update_cliente(id):
 
     cliente = Clientes.get_by_id(id)
@@ -231,8 +231,8 @@ def update_cliente(id):
 
 #? Eliminar cliente
 @clientes_bp.route('/<int:id>', methods=['DELETE'])
-@token_required
-@rol_required('Administrador', 'Vendedor')
+# @token_required
+# @rol_required('Administrador', 'Vendedor')
 def delete_cliente(id):
 
     cliente = Clientes.get_by_id(id)

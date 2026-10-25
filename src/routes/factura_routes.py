@@ -13,7 +13,7 @@ factura_bp = Blueprint('factura', __name__)
 
 #? Obtener todas las facturas
 @factura_bp.route('/', methods=['GET'])
-@token_required
+# @token_required
 def get_factura():
     page = request.args.get('page', default=1, type=int)
     per_page = request.args.get('per_page', default=5, type=int)
@@ -75,8 +75,8 @@ def get_factura():
 
 #? Obtener factura por ID
 @factura_bp.route('/<int:id>', methods=['GET'])
-@token_required
-@rol_required('Administrador', 'Vendedor', 'Cliente')
+# @token_required
+# @rol_required('Administrador', 'Vendedor', 'Cliente')
 def get_facturas(id):
     factura = Factura.get_by_id(id)
 
@@ -131,8 +131,8 @@ def get_facturas(id):
 
 #? Actualizar encabezado de factura
 @factura_bp.route('/<int:id>', methods=['PUT'])
-@token_required
-@rol_required('Administrador')
+# @token_required
+# @rol_required('Administrador')
 def update_factura(id):
     factura = Factura.get_by_id(id)
 
@@ -167,8 +167,8 @@ def update_factura(id):
 
 #? Crear factura
 @factura_bp.route('/', methods=['POST'])
-@token_required
-@rol_required('Administrador', 'Vendedor')
+# @token_required
+# @rol_required('Administrador', 'Vendedor')
 def create_factura():
 
     data = request.get_json()
@@ -267,8 +267,8 @@ def create_factura():
 
 #? Eliminar factura
 @factura_bp.route('/<int:id>', methods=['DELETE'])
-@token_required
-@rol_required('Administrador')
+# @token_required
+# @rol_required('Administrador')
 def delete_factura(id):
 
     factura = Factura.get_by_id(id)

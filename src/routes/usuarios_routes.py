@@ -8,8 +8,8 @@ usuarios_bp = Blueprint('usuarios', __name__)
 
 #? Obtener usuarios
 @usuarios_bp.route('/', methods=['GET'])
-@token_required
-@rol_required('Administrador')
+# @token_required
+# @rol_required('Administrador')
 def get_usuarios():
     page = request.args.get('page', default=1, type=int)
     per_page = request.args.get('per_page', default=5, type=int)
@@ -32,8 +32,8 @@ def get_usuarios():
 
 #? Obtener usuario por ID
 @usuarios_bp.route('/<int:id>', methods=['GET'])
-@token_required
-@rol_required('Administrador')
+# @token_required
+# @rol_required('Administrador')
 def get_usuario(id):
     usuario = Usuarios.get_by_id(id)
 
@@ -54,8 +54,8 @@ def get_usuario(id):
 
 #? Crear Usuario
 @usuarios_bp.route('/', methods=['POST'])
-@token_required
-@rol_required('Administrador')
+# @token_required
+# @rol_required('Administrador')
 def create_usuario():
     data = request.get_json() or {}
 
@@ -98,8 +98,8 @@ def create_usuario():
 
 #? Actualizar usuario
 @usuarios_bp.route('/<int:id>', methods=['PUT'])
-@token_required
-@rol_required('Administrador')
+# @token_required
+# @rol_required('Administrador')
 def update_usuario(id):
     usuario = Usuarios.get_by_id(id)
 
@@ -135,8 +135,8 @@ def update_usuario(id):
 
 #? Eliminar usuario
 @usuarios_bp.route('/<int:id>', methods=['DELETE'])
-@token_required
-@rol_required('Administrador')
+# @token_required
+# @rol_required('Administrador')
 def delete_usuario(id):
     usuario = Usuarios.get_by_id(id)
 

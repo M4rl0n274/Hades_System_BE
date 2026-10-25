@@ -6,7 +6,7 @@ categorias_bp = Blueprint('categorias', __name__)
 
 #? 1. Obtener todas (Funciona)
 @categorias_bp.route('/', methods=['GET'])
-@token_required
+# @token_required
 def get_categorias():
     page = request.args.get('page', default=1, type=int)
     per_page = request.args.get('per_page', default=5, type=int)
@@ -29,7 +29,7 @@ def get_categorias():
 
 #? 2. Cargar para Editar (Corregido: Usa nombre_categoria)
 @categorias_bp.route('/', methods=['GET'])
-@token_required
+# @token_required
 def get_categoria(id):
     categoria = Categorias.get_by_id(id)
     if not categoria:
@@ -43,7 +43,7 @@ def get_categoria(id):
 
 #? 3. Crear (Corregido: El controlador envía 'nombre', el modelo guarda 'nombre_categoria')
 @categorias_bp.route('/', methods=['POST'])
-@token_required
+# @token_required
 def create_categoria():
     data = request.get_json()
 # 1. Verificar si data existe y contiene la clave 'nombre_categoria'
@@ -74,7 +74,7 @@ def create_categoria():
 
 #? 4. Actualizar / Editar (Ruta que faltaba)
 @categorias_bp.route('/', methods=['PUT'])
-@token_required
+# @token_required
 def update_categoria(id):
     categoria = Categorias.get_by_id(id)
     if not categoria:
@@ -91,7 +91,7 @@ def update_categoria(id):
 
 #? 5. Eliminar (Corregido: Faltaba el / en la URL)
 @categorias_bp.route('/', methods=['DELETE'])
-@token_required
+# @token_required
 def delete_categoria(id):
     categoria = Categorias.get_by_id(id)
     if not categoria:

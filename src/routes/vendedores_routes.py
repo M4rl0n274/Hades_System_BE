@@ -6,8 +6,8 @@ vendedores_bp = Blueprint('vendedores', __name__)
 
 #? Obtener todos los vendedores
 @vendedores_bp.route('/', methods=['GET'])
-@token_required
-@rol_required('Administrador','Vendedor')
+# @token_required
+# @rol_required('Administrador','Vendedor')
 
 def get_vendedores():
     #paginación
@@ -47,8 +47,8 @@ def get_vendedores():
 
 #? Obtener vendedor por ID
 @vendedores_bp.route('/<int:id>', methods=['GET'])
-@token_required
-@rol_required('Administrador')
+# @token_required
+# @rol_required('Administrador')
 def get_vendedor(id):
 
     vendedor = Vendedor.get_by_id(id)
@@ -69,8 +69,8 @@ def get_vendedor(id):
 
 #? Crear vendedor
 @vendedores_bp.route('/', methods=['POST'])
-@token_required
-@rol_required('Administrador')
+# @token_required
+# @rol_required('Administrador')
 def create_vendedor():
 
     data = request.get_json()
@@ -139,8 +139,8 @@ def create_vendedor():
 
 #? Actualizar vendedor
 @vendedores_bp.route('/<int:id>', methods=['PUT'])
-@token_required
-@rol_required('Administrador')
+# @token_required
+# @rol_required('Administrador')
 def update_vendedor(id):
 
     vendedor = Vendedor.get_by_id(id)
@@ -207,8 +207,8 @@ def update_vendedor(id):
 
 #? Eliminar vendedor
 @vendedores_bp.route('/<int:id>', methods=['DELETE'])
-@token_required
-@rol_required('Administrador')
+# @token_required
+# @rol_required('Administrador')
 def delete_vendedor(id):
 
     vendedor = Vendedor.get_by_id(id)

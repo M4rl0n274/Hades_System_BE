@@ -28,8 +28,8 @@ def _recalcular_totales_factura(id_factura):
 
 #? Obtener todos los detalles
 @detalle_factura_bp.route('/', methods=['GET'])
-@token_required
-@rol_required('Administrador', 'Vendedor')
+# @token_required
+# @rol_required('Administrador', 'Vendedor')
 
 def get_detalleFactura():
     #paginación
@@ -55,8 +55,8 @@ def get_detalleFactura():
 
 #? Obtener detalle por ID
 @detalle_factura_bp.route('/<int:id>', methods=['GET'])
-@token_required
-@rol_required('Administrador', 'Vendedor')
+# @token_required
+# @rol_required('Administrador', 'Vendedor')
 def get_detalle(id):
 
     detalle = DetalleFactura.get_by_id(id)
@@ -71,8 +71,8 @@ def get_detalle(id):
 
 #? Actualizar detalle
 @detalle_factura_bp.route('/<int:id>', methods=['PUT'])
-@token_required
-@rol_required('Administrador', 'Vendedor')
+# @token_required
+# @rol_required('Administrador', 'Vendedor')
 def update_detalle(id):
 
     detalle = DetalleFactura.get_by_id(id)
@@ -119,8 +119,8 @@ def update_detalle(id):
 
 #? Eliminar detalle
 @detalle_factura_bp.route('/<int:id>', methods=['DELETE'])
-@token_required
-@rol_required('Administrador')
+# @token_required
+# @rol_required('Administrador')
 def delete_detalle(id):
 
     detalle = DetalleFactura.get_by_id(id)

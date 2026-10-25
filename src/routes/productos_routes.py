@@ -9,8 +9,8 @@ productos_bp = Blueprint('productos', __name__)
 
 #? Obtener todos los producto
 @productos_bp.route('/', methods=['GET'])
-@token_required
-@rol_required('Administrador', 'Vendedor', 'Usuario')
+# @token_required
+# @rol_required('Administrador', 'Vendedor', 'Usuario')
 
 def get_productos():
     #paginación
@@ -38,8 +38,8 @@ def get_productos():
 
 #? Obtener un producto por ID
 @productos_bp.route('/<int:id>', methods=['GET'])
-@token_required
-@rol_required('Administrador', 'Vendedor')
+# @token_required
+# @rol_required('Administrador', 'Vendedor')
 def get_producto(id):
     producto = Productos.get_by_id(id)
     if producto:
@@ -59,8 +59,8 @@ def get_producto(id):
 
 #? Crear un producto
 @productos_bp.route('/', methods=['POST'])
-@token_required
-@rol_required('Administrador')
+# @token_required
+# @rol_required('Administrador')
 def create_producto():
     data = request.get_json()
     producto = Productos(
@@ -101,8 +101,8 @@ def create_producto():
  
 #? Eliminar un producto
 @productos_bp.route('/<int:id>', methods=['DELETE'])
-@token_required
-@rol_required('Administrador')
+# @token_required
+# @rol_required('Administrador')
 def delete_producto(id):
     producto = Productos.get_by_id(id)
     if producto:
@@ -113,8 +113,8 @@ def delete_producto(id):
     
 #? editar un producto
 @productos_bp.route('/', methods=['PUT'])
-@token_required
-@rol_required('Administrador')
+# @token_required
+# @rol_required('Administrador')
 def update_producto(id):
     producto = Productos.get_by_id(id)
     if producto:
