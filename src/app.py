@@ -36,6 +36,6 @@ for bp in all_blueprints:
     print(url_prefix)
     app.register_blueprint(bp, url_prefix=url_prefix)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# if __name__ == '__main__':
+#     app.run(debug=True)
 
